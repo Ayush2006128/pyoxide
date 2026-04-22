@@ -92,3 +92,42 @@ impl<'a> Lexer<'a> {
         Token::Float(num_str.parse().unwrap())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_lexer_tokens() {
+        let input = "x = 10 + 2.5 * (y - 3)";
+        let mut lexer = Lexer::new(input);
+        let expected = vec![
+            Token::Ident("x".to_string()),
+            Token::Assign,
+            Token::Float(10.0),
+            Token::Plus,
+            Token::Float(2.5),
+            Token::Star,
+            Token::LParen,
+            Token::Ident("y".to_string()),
+            Token::Minus,
+            Token::Float(3.0),
+            Token::RParen,
+            Token::Eof,
+        ];
+
+        for token in expected {
+            assert_eq!(lexer.next_token(), token);
+        }
+    }
+
+    #[test]
+    fn test_lexer_whitespace() {
+        let input = "  x   =   123  ";
+        let mut lexer = Lexer::new(input);
+        assert_eq!(lexer.next_token(), Token::Ident("x".to_string()));
+        assert_eq!(lexer.next_token(), Token::Assign);
+        assert_eq!(lexer.next_token(), Token::Float(123.0));
+        assert_eq!(lexer.next_token(), Token::Eof);
+    }
+}

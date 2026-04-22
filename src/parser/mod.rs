@@ -1,13 +1,13 @@
 use crate::lexer::Token;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Expr {
     Number(f64),
     Variable(String),
     BinOp(Box<Expr>, Token, Box<Expr>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Stmt {
     Assign(String, Expr),
     Expr(Expr),
@@ -91,5 +91,50 @@ impl Parser {
                 self.current()
             ),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::lexer::Token;
+
+    #[test]
+    fn test_parse_assign() {
+        let tokens = vec![
+            Token::Ident("x".to_string()),
+            Token::Assign,
+            Token::Float(42.0),
+            Token::Eof,
+        ];
+        let mut parser = Parser::new(tokens);
+        let stmt = parser.parse_statement();
+        assert_eq!(stmt, Stmt::Assign("x".to_string(), Expr::Number(42.0)));
+    }
+
+    #[test]
+    fn test_parse_precedence() {
+        let tokens = vec![
+            Token::Float(1.0),
+            Token::Plus,
+            Token::Float(2.0),
+            Token::Star,
+            Token::Float(3.0),
+            Token::Eof,
+        ];
+        let mut parser = Parser::new(tokens);
+        let stmt = parser.parse_statement();
+
+        // 1 + (2 * 3)
+        let expected = Stmt::Expr(Expr::BinOp(
+            Box::new(Expr::Number(1.0)),
+            Token::Plus,
+            Box::new(Expr::BinOp(
+                Box::new(Expr::Number(2.0)),
+                Token::Star,
+                Box::new(Expr::Number(3.0)),
+            )),
+        ));
+        assert_eq!(stmt, expected);
     }
 }
