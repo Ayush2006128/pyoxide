@@ -1,3 +1,4 @@
+pub mod file_runner;
 use crate::lexer::Token;
 use crate::parser::{Expr, Stmt};
 use std::collections::HashMap;
@@ -45,6 +46,28 @@ impl Interpreter {
                 println!("{}", result);
             }
         }
+    }
+
+    pub fn run(&mut self, source: &str) {
+        use crate::lexer::Lexer;
+        use crate::parser::Parser;
+
+        let mut lexer = Lexer::new(source);
+        let mut tokens = Vec::new();
+        loop {
+            let tok = lexer.next_token();
+            if tok == Token::Eof {
+                break;
+            }
+            tokens.push(tok);
+        }
+
+        let mut parser = Parser::new(tokens);
+        // Note: The current parser seems to only parse one statement.
+        // If we want to support multiple statements per file/line, we might need to update the parser.
+        // For now, I'll follow the REPL's pattern.
+        let stmt = parser.parse_statement();
+        self.execute(stmt);
     }
 }
 
